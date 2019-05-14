@@ -1,5 +1,6 @@
 # coding:utf8
 import requests, json
+from common import logger
 
 
 class HTTP():
@@ -31,7 +32,7 @@ class HTTP():
         try:
             self.session.headers.pop(key)
         except Exception as e:
-            print(e)
+            logger.exception(e)
 
         self.writer.write(self.writer.row, self.writer.clo, "PASS")
         self.writer.write(self.writer.row, self.writer.clo + 1, str(self.session.headers))
@@ -48,7 +49,7 @@ class HTTP():
         self.__get_params(params)
         # 调用post，请求接口
         self.result = self.session.post(self.url + path, data=self.params)
-        print(self.result.text)
+        logger.info(self.result.text)
         self.jsonres = json.loads(self.__to_json(self.result.text))
         self.writer.write(self.writer.row, self.writer.clo, "PASS")
         self.writer.write(self.writer.row, self.writer.clo + 1, str(self.jsonres))
@@ -92,11 +93,9 @@ class HTTP():
         :return: 无
         """
         if str(self.jsonres[key]) == value:
-            print("PASS")
             self.writer.write(self.writer.row, self.writer.clo, "PASS")
             self.writer.write(self.writer.row, self.writer.clo + 1, self.jsonres[key])
         else:
-            print("FAIL")
             self.writer.write(self.writer.row, self.writer.clo, "FAIL")
             self.writer.write(self.writer.row, self.writer.clo + 1, self.jsonres[key])
 
@@ -107,7 +106,7 @@ class HTTP():
         :param p: 保存后的参数名
         :return: 无
         """
-        print(self.jsonres)
+        logger.info(self.jsonres)
         self.json[p] = self.jsonres[key]
         self.writer.write(self.writer.row, self.writer.clo, "PASS")
         self.writer.write(self.writer.row, self.writer.clo + 1, str(self.json))
