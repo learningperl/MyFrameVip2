@@ -41,7 +41,7 @@ def runCases(http, line):
 if __name__ == "__main__":
     logger.info("整个框架使用该入口执行")
 
-    casename = 'HTTP.xls'
+    casename = 'WEB.xls'
 
     # 运行用例之前，初始化配置，初始化数据库
     config.get_config('./lib/conf.properties')
