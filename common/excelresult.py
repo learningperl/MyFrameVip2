@@ -27,6 +27,15 @@ class Res:
 
         reader = Reader()
         reader.open_excel(result_path)
+        # 读到第二行
+        reader.readline()
+        line = reader.readline()
+
+        self.sumarry['runtype'] = line[1]
+        self.sumarry['title'] = line[2]
+        self.sumarry['starttime'] = line[3]
+        self.sumarry['endtime'] = line[4]
+
         # 获取所有sheet页面
         for n in reader.get_sheets():
             # logger.info(n)
@@ -89,5 +98,5 @@ class Res:
 
 if __name__ == '__main__':
     res = Res()
-    r = res.get_res('../lib/results/result-HTTP接口用例.xls')
+    r = res.get_res('../lib/result-HTTP.xls')
     print(r)

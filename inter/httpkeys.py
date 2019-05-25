@@ -1,5 +1,5 @@
 # coding:utf8
-import requests, json
+import requests, jsonpath, json
 from common import logger
 
 
@@ -20,12 +20,16 @@ class HTTP():
         self.jsonres = None
         self.json = {}
         self.writer = w
+        self.status = "200"
+        self.session.headers[
+            'User-Agent'] = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.96 Safari/537.36'
+        self.session.headers['Content-type'] = 'application/x-www-form-urlencoded'
 
     def seturl(self, u):
         # 设置请求的基本url
         self.url = u + "/"
-        self.writer.write(self.writer.row,self.writer.clo,"PASS")
-        self.writer.write(self.writer.row, self.writer.clo+1, str(self.url))
+        self.writer.write(self.writer.row, self.writer.clo, "PASS")
+        self.writer.write(self.writer.row, self.writer.clo + 1, str(self.url))
 
     def removeheader(self, key):
         # 从请求的头里面删除key这个键
@@ -53,6 +57,26 @@ class HTTP():
         self.jsonres = json.loads(self.__to_json(self.result.text))
         self.writer.write(self.writer.row, self.writer.clo, "PASS")
         self.writer.write(self.writer.row, self.writer.clo + 1, str(self.jsonres))
+
+    def post_rest(self, path, params=None):
+        # 解析参数为一个dict
+        if params.find('=') >= 0 or params == "":
+            self.__get_params(params)
+            # 调用post，请求接口
+            self.result = self.session.post(self.url + path, data=self.params)
+        else:
+            self.result = self.session.post(self.url + path+'?'+params)
+
+        if self.result.status_code > 300:
+            self.status = str(self.result.status_code)
+            self.writer.write(self.writer.row, self.writer.clo, "PASS")
+            self.writer.write(self.writer.row, self.writer.clo + 1, str(self.result.text))
+        else:
+            self.status = str(self.result.status_code)
+            self.jsonres = json.loads(self.__to_json(self.result.text))
+
+            self.writer.write(self.writer.row, self.writer.clo, "PASS")
+            self.writer.write(self.writer.row, self.writer.clo + 1, str(self.jsonres))
 
     def get(self, path, params=None):
         # 调用post，请求接口
@@ -92,12 +116,27 @@ class HTTP():
         :param value: 期望值
         :return: 无
         """
-        if str(self.jsonres[key]) == value:
-            self.writer.write(self.writer.row, self.writer.clo, "PASS")
-            self.writer.write(self.writer.row, self.writer.clo + 1, self.jsonres[key])
+        if int(self.status) > 300:
+            if key == "status":
+                if self.status == value:
+                    self.writer.write(self.writer.row, self.writer.clo, "PASS")
+                    self.writer.write(self.writer.row, self.writer.clo + 1,
+                                      str(self.status))
+                else:
+                    self.writer.write(self.writer.row, self.writer.clo, "FAIL")
+                    self.writer.write(self.writer.row, self.writer.clo + 1,
+                                      str(self.status))
+            else:
+                self.writer.write(self.writer.row, self.writer.clo, "FAIL")
+                self.writer.write(self.writer.row, self.writer.clo + 1,
+                                  str(self.status))
         else:
-            self.writer.write(self.writer.row, self.writer.clo, "FAIL")
-            self.writer.write(self.writer.row, self.writer.clo + 1, self.jsonres[key])
+            if str(jsonpath.jsonpath(self.jsonres, key)[0]) == value:
+                self.writer.write(self.writer.row, self.writer.clo, "PASS")
+                self.writer.write(self.writer.row, self.writer.clo + 1, str(jsonpath.jsonpath(self.jsonres, key)[0]))
+            else:
+                self.writer.write(self.writer.row, self.writer.clo, "FAIL")
+                self.writer.write(self.writer.row, self.writer.clo + 1, str(jsonpath.jsonpath(self.jsonres, key)[0]))
 
     def savejson(self, key, p):
         """
@@ -107,7 +146,7 @@ class HTTP():
         :return: 无
         """
         logger.info(self.jsonres)
-        self.json[p] = self.jsonres[key]
+        self.json[p] = str(jsonpath.jsonpath(self.jsonres, key)[0])
         self.writer.write(self.writer.row, self.writer.clo, "PASS")
         self.writer.write(self.writer.row, self.writer.clo + 1, str(self.json))
 

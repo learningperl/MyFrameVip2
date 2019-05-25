@@ -1,11 +1,14 @@
 # coding:utf8
 from common.Excel import Reader, Writer
 from inter.httpkeys import HTTP
-import inspect
+from inter.soapkeys import SOAP
+import inspect,time
 from common import logger,config
 from common.mysql import Mysql
 from common.mail import Mail
-
+from common.excelresult import Res
+from web.web import Web
+from app.app import APP
 
 def runCases(http, line):
     """
@@ -38,6 +41,8 @@ def runCases(http, line):
 if __name__ == "__main__":
     logger.info("整个框架使用该入口执行")
 
+    casename = 'HTTP.xls'
+
     # 运行用例之前，初始化配置，初始化数据库
     config.get_config('./lib/conf.properties')
     mysql = Mysql()
@@ -45,14 +50,27 @@ if __name__ == "__main__":
 
     # 开的读取用例
     reader = Reader()
-    reader.open_excel('./lib/HTTP.xls')
+    reader.open_excel('./lib/' + casename)
     sheetname = reader.get_sheets()
     logger.info(sheetname)
 
     writer = Writer()
-    writer.copy_open('./lib/HTTP.xls', './lib/result-HTTP.xls')
+    writer.copy_open('./lib/' + casename, './lib/结果-' + casename)
 
-    http = HTTP(writer)
+    t = str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
+
+    writer.set_sheet(sheetname[0])
+    writer.write(1,3,t)
+    reader.readline()
+    line = reader.readline()
+    if line[1] == 'HTTP':
+        http = HTTP(writer)
+    elif line[1] == 'WEB':
+        http = Web(writer)
+    elif line[1] == "APP":
+        http = APP(writer)
+    else:
+        http = SOAP(writer)
 
     for sheet in sheetname:
         # 设置当前读取的sheet页面
@@ -70,7 +88,31 @@ if __name__ == "__main__":
             except Exception as e:
                 logger.exception(e)
 
+    writer.set_sheet(sheetname[0])
+    t = str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+    writer.write(1, 4, t)
+
     writer.save_close()
 
+    res = Res()
+    result = res.get_res('./lib/结果-' + casename)
+    print(result)
+
     mail = Mail()
-    mail.send(config.config['mailtxt'])
+    mail.mail_info['mail_subject'] = result['title']
+    mailtext = config.config['mailtxt']
+    mailtext = mailtext.replace('title',result['title'])
+    mailtext = mailtext.replace('status', result['status'])
+    mailtext = mailtext.replace('runtype', result['runtype'])
+    mailtext = mailtext.replace('passrate', result['passrate'])
+    mailtext = mailtext.replace('starttime', result['starttime'])
+    mailtext = mailtext.replace('casecount', result['casecount'])
+    mailtext = mailtext.replace('endtime', result['endtime'])
+    if result['status'] == 'Fail':
+        mailtext = mailtext.replace('#00d800', 'red')
+
+    # 附件的路径，如果有多个就用,分割
+    mail.mail_info['filepaths'] = ['./lib/结果-' + casename]
+    mail.mail_info['filenames'] = ['结果-' + casename]
+
+    mail.send(mailtext)
