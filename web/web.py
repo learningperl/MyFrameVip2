@@ -34,7 +34,7 @@ class Web:
             self.driver = webdriver.Chrome(executable_path=d, options=op)
             self.driver.implicitly_wait(30)
             self.writer.write(self.writer.row, self.writer.clo, "PASS")
-            self.writer.write(self.writer.row, self.writer.clo + 1)
+            self.writer.write(self.writer.row, self.writer.clo + 1, "成功打开浏览器")
 
     def geturl(self, url):
         self.driver.get(url)

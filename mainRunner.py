@@ -41,7 +41,7 @@ def runCases(http, line):
 if __name__ == "__main__":
     logger.info("整个框架使用该入口执行")
 
-    casename = 'WEB.xls'
+    casename = 'HTTP.xls'
 
     # 运行用例之前，初始化配置，初始化数据库
     config.get_config('./lib/conf.properties')
@@ -96,7 +96,6 @@ if __name__ == "__main__":
 
     res = Res()
     result = res.get_res('./lib/结果-' + casename)
-    print(result)
 
     mail = Mail()
     mail.mail_info['mail_subject'] = result['title']

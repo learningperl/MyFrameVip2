@@ -1,11 +1,16 @@
 # coding:utf8
-import jsonpath,json
+# import jsonpath,json
+#
+#
+# s = '{"status": 405, "msg": "非法请求"}'
+#
+# jsonres = json.loads(s)
+# r = jsonpath.jsonpath(jsonres, "status")
+# print(str(r[0])=="405")
+#
+# print(jsonres['status'])
 
+s = '11'
+s1 = '2'
 
-s = '{"status": 405, "msg": "非法请求"}'
-
-jsonres = json.loads(s)
-r = jsonpath.jsonpath(jsonres, "status")
-print(str(r[0])=="405")
-
-print(jsonres['status'])
+print(s<s1)

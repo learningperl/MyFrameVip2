@@ -22,7 +22,7 @@ class HTTP():
         self.writer = w
         self.status = "200"
         self.session.headers[
-            'User-Agent'] = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.96 Safari/537.36'
+                'User-Agent'] = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.96 Safari/537.36'
         self.session.headers['Content-type'] = 'application/x-www-form-urlencoded'
 
     def seturl(self, u):
@@ -57,6 +57,18 @@ class HTTP():
         self.jsonres = json.loads(self.__to_json(self.result.text))
         self.writer.write(self.writer.row, self.writer.clo, "PASS")
         self.writer.write(self.writer.row, self.writer.clo + 1, str(self.jsonres))
+
+
+    def get(self, url, params=None):
+        # 解析参数为一个dict
+        self.__get_params(params)
+        # 调用post，请求接口
+        self.result = self.session.get(self.url + '?' + params)
+        logger.info(self.result.text)
+        self.jsonres = json.loads(self.__to_json(self.result.text))
+        self.writer.write(self.writer.row, self.writer.clo, "PASS")
+        self.writer.write(self.writer.row, self.writer.clo + 1, str(self.jsonres))
+
 
     def post_rest(self, path, params=None):
         # 解析参数为一个dict
@@ -124,8 +136,7 @@ class HTTP():
                                       str(self.status))
                 else:
                     self.writer.write(self.writer.row, self.writer.clo, "FAIL")
-                    self.writer.write(self.writer.row, self.writer.clo + 1,
-                                      str(self.status))
+                    self.writer.write(self.writer.row, self.writer.clo + 1,str(self.status))
             else:
                 self.writer.write(self.writer.row, self.writer.clo, "FAIL")
                 self.writer.write(self.writer.row, self.writer.clo + 1,
